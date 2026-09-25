@@ -100,30 +100,75 @@ def build_digest():
 
 
 def render_company_block(company):
-    parts = [f"<h3 style='margin-bottom:4px'>{company['name']}</h3>"]
+    has_signal = bool(company["direct_signals"])
+    accent = "#0a7d3e" if has_signal else "#94a3b8"  # green if direct signal, grey if just news
+    bg = "#f0fdf4" if has_signal else "#f8fafc"
+
+    parts = [
+        f'<div style="border-left:4px solid {accent}; background:{bg}; '
+        f'border-radius:6px; padding:14px 18px; margin-bottom:14px;">',
+        f'<h3 style="margin:0 0 8px 0; font-family:Arial,sans-serif; '
+        f'font-size:16px; color:#111827;">{company["name"]}</h3>',
+    ]
     if company["direct_signals"]:
-        parts.append(f"<p><strong>Direct signal:</strong> {company['direct_signals']}</p>")
+        parts.append(
+            '<p style="margin:0 0 6px 0; font-family:Arial,sans-serif; font-size:14px; '
+            'color:#1f2937; line-height:1.5;">'
+            '<span style="display:inline-block; background:#0a7d3e; color:#ffffff; '
+            'font-size:11px; font-weight:bold; padding:2px 8px; border-radius:10px; '
+            'margin-right:8px;">DIRECT SIGNAL</span>'
+            f'{company["direct_signals"]}</p>'
+        )
     if company["general_news"]:
-        parts.append(f"<p><strong>General news:</strong> {company['general_news']}</p>")
+        parts.append(
+            '<p style="margin:0; font-family:Arial,sans-serif; font-size:14px; '
+            f'color:#4b5563; line-height:1.5;">{company["general_news"]}</p>'
+        )
+    parts.append('</div>')
     return "\n".join(parts)
 
 
 def render_html(results):
     today = date.today().strftime("%A %d %B %Y")
-    sections = [f"<h1>Maritime Job Radar — {today}</h1>"]
 
-    sections.append("<h2>Tier 1</h2>")
+    def tier_header(label, count):
+        return (
+            f'<h2 style="font-family:Arial,sans-serif; font-size:13px; '
+            f'text-transform:uppercase; letter-spacing:1px; color:#ffffff; '
+            f'background:#1e3a5f; padding:8px 14px; border-radius:4px; '
+            f'margin:28px 0 14px 0;">{label} &nbsp;'
+            f'<span style="opacity:0.7; font-weight:normal;">({count})</span></h2>'
+        )
+
+    sections = [
+        '<div style="max-width:640px; margin:0 auto; padding:20px; '
+        'background:#ffffff;">',
+        f'<h1 style="font-family:Arial,sans-serif; font-size:22px; '
+        f'color:#111827; border-bottom:3px solid #1e3a5f; padding-bottom:10px; '
+        f'margin-bottom:4px;">Maritime Job Radar</h1>',
+        f'<p style="font-family:Arial,sans-serif; font-size:13px; color:#6b7280; '
+        f'margin-top:0;">{today}</p>',
+    ]
+
+    sections.append(tier_header("Tier 1", len(results["tier1"])))
     if results["tier1"]:
         sections += [render_company_block(c) for c in results["tier1"]]
     else:
-        sections.append("<p>No updates today.</p>")
+        sections.append(
+            '<p style="font-family:Arial,sans-serif; color:#9ca3af; '
+            'font-size:14px;">No updates today.</p>'
+        )
 
-    sections.append("<h2>Tier 2</h2>")
+    sections.append(tier_header("Tier 2", len(results["tier2"])))
     if results["tier2"]:
         sections += [render_company_block(c) for c in results["tier2"]]
     else:
-        sections.append("<p>No updates today.</p>")
+        sections.append(
+            '<p style="font-family:Arial,sans-serif; color:#9ca3af; '
+            'font-size:14px;">No updates today.</p>'
+        )
 
+    sections.append('</div>')
     return "\n".join(sections)
 
 
